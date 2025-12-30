@@ -5,13 +5,13 @@ A self-improving coding agent that learns from every session. Patterns, failures
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Cloud/continual-learning/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/harivansh-afk/claude-continual-learning/main/install.sh | bash
 ```
 
 Or clone and install manually:
 
 ```bash
-git clone https://github.com/Cloud/continual-learning.git
+git clone https://github.com/harivansh-afk/claude-continual-learning.git
 cd continual-learning
 ./install.sh /path/to/your/project
 ```
