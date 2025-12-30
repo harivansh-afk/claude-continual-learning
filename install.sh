@@ -2,7 +2,7 @@
 # Continual Learning System Installer
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/continual-learning/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/harivansh-afk/claude-continual-learning/main/install.sh | bash
 #   or: ./install.sh [target-dir]
 #
 # This installer:
@@ -24,7 +24,10 @@ TARGET_DIR="${1:-.}"
 TARGET_DIR=$(cd "$TARGET_DIR" && pwd)
 
 # Determine script location (for local installs)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+
+# GitHub raw URL for remote downloads
+REPO_RAW_URL="https://raw.githubusercontent.com/harivansh-afk/claude-continual-learning/main"
 
 echo -e "${GREEN}Continual Learning System Installer${NC}"
 echo "Installing to: $TARGET_DIR"
@@ -55,14 +58,15 @@ copy_file() {
     local src="$1"
     local dest="$2"
 
-    if [ -f "$SCRIPT_DIR/$src" ]; then
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/$src" ]; then
         # Local install
         cp "$SCRIPT_DIR/$src" "$dest"
     else
-        # Remote install - would need to update with actual repo URL
-        echo -e "${RED}Error: Source file not found: $src${NC}"
-        echo "For remote installation, update REPO_URL in this script."
-        exit 1
+        # Remote install - download from GitHub
+        if ! curl -fsSL "$REPO_RAW_URL/$src" -o "$dest"; then
+            echo -e "${RED}Error: Failed to download $src${NC}"
+            exit 1
+        fi
     fi
 }
 
