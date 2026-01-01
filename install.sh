@@ -137,7 +137,7 @@ echo ""
 # Change to target directory and run claude /setup-agent
 cd "$TARGET_DIR"
 if command -v claude &> /dev/null; then
-    claude /setup-agent
+    claude --dangerously-skip-permissions /setup-agent
 else
     echo -e "${RED}Error: 'claude' command not found in PATH${NC}"
     echo "Please ensure Claude Code is installed and run manually:"
