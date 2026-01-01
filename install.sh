@@ -131,20 +131,26 @@ fi
 echo ""
 echo -e "${GREEN}Installation complete!${NC}"
 echo ""
-echo "Running setup-agent to initialize the learning agent..."
-echo ""
 
 # Change to target directory and run claude /setup-agent
 cd "$TARGET_DIR"
 if command -v claude &> /dev/null; then
-    claude --print --dangerously-skip-permissions -p "/setup-agent"
+    # Check if we have a TTY available (not piped via curl | bash)
+    if [ -t 0 ]; then
+        echo "Running setup-agent to initialize the learning agent..."
+        echo ""
+        claude --dangerously-skip-permissions /setup-agent
+        echo ""
+        echo "Setup complete! The agent will automatically learn from each session."
+    else
+        echo "To complete setup, run:"
+        echo "  cd $TARGET_DIR && claude /setup-agent"
+        echo ""
+        echo "This will analyze your codebase and set up the learning agent."
+    fi
 else
     echo -e "${RED}Error: 'claude' command not found in PATH${NC}"
-    echo "Please ensure Claude Code is installed and run manually:"
-    echo "  1. cd $TARGET_DIR"
-    echo "  2. Run: claude /setup-agent"
+    echo "Please install Claude Code and run:"
+    echo "  cd $TARGET_DIR && claude /setup-agent"
     exit 1
 fi
-
-echo ""
-echo "Setup complete! The agent will automatically learn from each session."
