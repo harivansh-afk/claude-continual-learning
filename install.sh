@@ -131,10 +131,20 @@ fi
 echo ""
 echo -e "${GREEN}Installation complete!${NC}"
 echo ""
-echo "Next steps:"
-echo "  1. cd $TARGET_DIR"
-echo "  2. Run: claude"
-echo "  3. Type: /setup-agent"
+echo "Running setup-agent to initialize the learning agent..."
 echo ""
-echo "This will analyze your codebase and set up the learning agent."
-echo "After that, the agent will automatically learn from each session!"
+
+# Change to target directory and run claude /setup-agent
+cd "$TARGET_DIR"
+if command -v claude &> /dev/null; then
+    claude /setup-agent
+else
+    echo -e "${RED}Error: 'claude' command not found in PATH${NC}"
+    echo "Please ensure Claude Code is installed and run manually:"
+    echo "  1. cd $TARGET_DIR"
+    echo "  2. Run: claude /setup-agent"
+    exit 1
+fi
+
+echo ""
+echo "Setup complete! The agent will automatically learn from each session."
