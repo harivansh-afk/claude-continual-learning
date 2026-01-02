@@ -35,13 +35,7 @@ echo ""
 
 # Check if .claude directory exists
 if [ -d "$TARGET_DIR/.claude" ]; then
-    echo -e "${YELLOW}Warning: .claude directory already exists${NC}"
-    read -p "Continue and merge files? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Aborted."
-        exit 1
-    fi
+    echo -e "${YELLOW}Note: .claude directory already exists - will add missing files only${NC}"
 fi
 
 # Create directory structure
@@ -54,19 +48,28 @@ mkdir -p "$TARGET_DIR/.claude/hooks"
 echo "Copying files..."
 
 # Function to copy file from local or download from remote
+# Only copies if destination doesn't exist (no overwrite)
 copy_file() {
     local src="$1"
     local dest="$2"
 
+    # Skip if destination already exists
+    if [ -f "$dest" ]; then
+        echo "  Skipping $(basename "$dest") - already exists"
+        return 0
+    fi
+
     if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/$src" ]; then
         # Local install
         cp "$SCRIPT_DIR/$src" "$dest"
+        echo "  Added $(basename "$dest")"
     else
         # Remote install - download from GitHub
         if ! curl -fsSL "$REPO_RAW_URL/$src" -o "$dest"; then
             echo -e "${RED}Error: Failed to download $src${NC}"
             exit 1
         fi
+        echo "  Added $(basename "$dest")"
     fi
 }
 
@@ -76,39 +79,42 @@ copy_file "commands/setup-agent.md" "$TARGET_DIR/.claude/commands/setup-agent.md
 copy_file "commands/retrospective.md" "$TARGET_DIR/.claude/commands/retrospective.md"
 copy_file "hooks/session-end.sh" "$TARGET_DIR/.claude/hooks/session-end.sh"
 
-# Make hook executable
-chmod +x "$TARGET_DIR/.claude/hooks/session-end.sh"
+# Make hook executable (if it exists and was just copied)
+if [ -f "$TARGET_DIR/.claude/hooks/session-end.sh" ]; then
+    chmod +x "$TARGET_DIR/.claude/hooks/session-end.sh"
+fi
 
-# Handle settings.json merge
-echo "Configuring hooks..."
+# Handle settings.json
 SETTINGS_FILE="$TARGET_DIR/.claude/settings.json"
 
 if [ -f "$SETTINGS_FILE" ]; then
-    # Merge with existing settings
-    echo -e "${YELLOW}Existing settings.json found. Please manually add the hook configuration:${NC}"
-    echo ""
-    cat << 'EOF'
-Add to your .claude/settings.json:
+    # Check if SessionEnd hook is already configured
+    if grep -q "session-end.sh" "$SETTINGS_FILE" 2>/dev/null; then
+        echo "  Skipping settings.json - SessionEnd hook already configured"
+    else
+        echo ""
+        echo -e "${YELLOW}Existing settings.json found. Please manually add the hook configuration:${NC}"
+        echo ""
+        cat << 'EOF'
+Add to your .claude/settings.json hooks section:
 
-{
-  "hooks": {
-    "SessionEnd": [
+"SessionEnd": [
+  {
+    "hooks": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/session-end.sh\"",
-            "timeout": 60
-          }
-        ]
+        "type": "command",
+        "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/session-end.sh\"",
+        "timeout": 60
       }
     ]
   }
-}
+]
 EOF
-    echo ""
+        echo ""
+    fi
 else
     # Create new settings.json
+    echo "  Creating settings.json with SessionEnd hook"
     cat > "$SETTINGS_FILE" << 'EOF'
 {
   "hooks": {
