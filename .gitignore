@@ -1,0 +1,3 @@
+# Claude Code hooks artifacts
+.claude/hooks/*.log
+.claude/hooks/locks/
